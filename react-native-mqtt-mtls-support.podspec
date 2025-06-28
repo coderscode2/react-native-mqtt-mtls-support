@@ -10,10 +10,13 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,swift}"
   s.requires_arc = true
 
-  # Add dependencies
+  # ✅ Core dependencies
   s.dependency 'CocoaMQTT'
   s.dependency 'React-Core'
 
-  # Specify Swift version
+  # ✅ Framework needed for SSL constants like `kCFStreamSSLTrustedRoots`
+  s.frameworks = 'CFNetwork'
+
+  # ✅ Swift version compatibility
   s.swift_version = '5.0'
 end
