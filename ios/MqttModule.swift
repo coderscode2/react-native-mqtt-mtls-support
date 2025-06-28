@@ -1,4 +1,5 @@
 import Foundation
+import CFNetwork
 import CocoaMQTT
 
 @objc(MqttModule)
@@ -63,7 +64,8 @@ class MqttModule: NSObject {
             var items: CFArray?
             let options: NSDictionary = [kSecImportExportPassphrase as NSString: ""]
             let status = SecPKCS12Import(p12 as CFData, options, &items)
-            guard status == errSecSuccess, let array = items as? [[String: Any]],
+            guard status == errSecSuccess,
+                  let array = items as? [[String: Any]],
                   let identity = array.first?[kSecImportItemIdentity as String] as? SecIdentity else {
                 throw NSError(domain: "SSL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to parse identity"])
             }
@@ -71,7 +73,6 @@ class MqttModule: NSObject {
         }
 
         let identity = try loadIdentity(cert: clientCertPem, key: privateKeyPem)
-
         let rootCert = try pemToDerCert(pem: rootCaPem)
 
         return [
@@ -108,7 +109,8 @@ class MqttModule: NSObject {
     }
 
     private func pemToDerCert(pem: String) throws -> SecCertificate {
-        let lines = pem.components(separatedBy: "\n").filter { !$0.contains("BEGIN") && !$0.contains("END") }
+        let lines = pem.components(separatedBy: .newlines)
+                        .filter { !$0.contains("BEGIN") && !$0.contains("END") }
         let base64 = lines.joined()
         guard let data = Data(base64Encoded: base64) else {
             throw NSError(domain: "SSL", code: -3, userInfo: [NSLocalizedDescriptionKey: "Invalid CA cert"])
@@ -120,7 +122,7 @@ class MqttModule: NSObject {
     }
 
     private func shell(_ command: String) throws -> (output: String, exitCode: Int32) {
-        let task = Process()
+        let task = Foundation.Process()
         task.launchPath = "/bin/bash"
         task.arguments = ["-c", command]
         let pipe = Pipe()
