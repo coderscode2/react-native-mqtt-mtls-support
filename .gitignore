@@ -1,0 +1,78 @@
+# Node.js dependencies
+node_modules/
+example/node_modules/
+
+# TypeScript output
+dist/
+lib/
+*.tsbuildinfo
+
+# Build artifacts
+android/build/
+android/.gradle/
+ios/build/
+ios/Pods/
+ios/Podfile.lock
+example/android/build/
+example/android/.gradle/
+example/ios/build/
+example/ios/Pods/
+example/ios/Podfile.lock
+
+# Xcode files
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+
+# OS & Editor junk
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.idea/
+.vscode/
+
+# Yarn Plug'n'Play
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+.yarnrc.yml
+
+# Metro, Watchman, etc.
+.cache/
+tmp/
+example/.cache/
+example/tmp/
+
+# React Native bundler
+*.packager.js
+*.bundle
+*.hmap
+
+# Test outputs
+coverage/
+jest-output/
+
+# Android/Gradle files
+*.iml
+.gradle/
+local.properties
+example/local.properties
+example/.gradle/
+example/node_modules/
+
+# Yarn v2+ files
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+
+# Prevents this specific file from being committed
+.yarn/cache/
+
+
