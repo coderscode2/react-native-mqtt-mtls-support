@@ -7,9 +7,13 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.platform     = :ios, "12.0"
   s.source       = { :git => "https://github.com/coderscode2/react-native-mqtt-mtls-support.git", :tag => "#{s.version}" }
-  s.source_files  = "ios/**/*.{h,m,swift}"
+  s.source_files = "ios/**/*.{h,m,swift}"
   s.requires_arc = true
-  s.swift_version = '5.0'
+
+  # Add dependencies
   s.dependency 'CocoaMQTT'
   s.dependency 'React-Core'
+
+  # Specify Swift version
+  s.swift_version = '5.0'
 end
