@@ -1,6 +1,7 @@
 import Foundation
 import CocoaMQTT
 import CFNetwork
+import CoreFoundation
 
 @objc(MqttModule)
 class MqttModule: NSObject {
