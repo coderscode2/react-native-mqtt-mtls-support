@@ -11,5 +11,4 @@ Pod::Spec.new do |s|
   s.requires_arc = true
   s.swift_version = '5.0'
   s.dependency 'CocoaMQTT'
-  s.dependency 'MqttCocoaAsyncSocket', :modular_headers => true
 end
