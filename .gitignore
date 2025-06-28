@@ -1,78 +1,45 @@
-# Node.js dependencies
+# Root node_modules and dist
 node_modules/
-example/node_modules/
-
-# TypeScript output
 dist/
-lib/
-*.tsbuildinfo
-
-# Build artifacts
-android/build/
-android/.gradle/
-ios/build/
-ios/Pods/
-ios/Podfile.lock
-example/android/build/
-example/android/.gradle/
-example/ios/build/
-example/ios/Pods/
-example/ios/Podfile.lock
-
-# Xcode files
-*.xcodeproj/
-*.xcworkspace/
-xcuserdata/
-
-# OS & Editor junk
-.DS_Store
-Thumbs.db
+build/
 *.log
-*.swp
-.idea/
+*.tmp
+*.temp
+
+# macOS
+.DS_Store
+
+# VSCode
 .vscode/
 
-# Yarn Plug'n'Play
+# Yarn
 .yarn/*
 !.yarn/patches
-!.yarn/plugins
 !.yarn/releases
+!.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
 .yarnrc.yml
 
-# Metro, Watchman, etc.
-.cache/
-tmp/
-example/.cache/
-example/tmp/
-
-# React Native bundler
-*.packager.js
-*.bundle
-*.hmap
-
-# Test outputs
-coverage/
-jest-output/
-
-# Android/Gradle files
-*.iml
-.gradle/
-local.properties
-example/local.properties
-example/.gradle/
+# Example app specific ignores
 example/node_modules/
-
-# Yarn v2+ files
-.yarn/*
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
-
-# Prevents this specific file from being committed
-.yarn/cache/
-
-
+example/android/.gradle/
+example/android/app/build/
+example/android/build/
+example/ios/build/
+example/ios/Pods/
+example/ios/Podfile.lock
+example/ios/*.xcworkspace
+example/ios/*.xcuserdata
+example/.expo/
+example/.expo-shared/
+example/.turbo/
+example/.idea/
+example/dist/
+example/build/
+example/coverage/
+example/tmp/
+example/metro-cache/
+example/.jest/
+example/.DS_Store
