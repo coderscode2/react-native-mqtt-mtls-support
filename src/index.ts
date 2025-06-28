@@ -1,14 +1,7 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
 
-const LINKING_ERROR =
-  `The package 'react-native-mqtt-mtls-support' doesn't seem to be linked.`;
+const { MqttMtlsSupport, CSR } = NativeModules;
 
-const MqttModule = NativeModules.MqttModule
-  ? NativeModules.MqttModule
-  : new Proxy({}, {
-      get() {
-        throw new Error(LINKING_ERROR);
-      },
-    });
+export const generateCSR = (...args) => CSR.generateCSR(...args);
 
-export default MqttModule;
+export default MqttMtlsSupport;
