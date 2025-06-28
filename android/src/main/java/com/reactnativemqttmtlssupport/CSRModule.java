@@ -63,90 +63,48 @@ public class CSRModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void generateECCKeyPair(Promise promise) {
-        try {
-            KeyPair keyPair = generateSoftwareECCKeyPair();
-            PrivateKey privateKey = keyPair.getPrivate();
-            PublicKey publicKey = keyPair.getPublic();
-
-            // Store the key pair in AndroidKeyStore
-            KeyStore keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER);
-            keyStore.load(null);
-
-            // Create a certificate chain with just the public key (self-signed for storage)
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(
-                new ByteArrayInputStream(publicKey.getEncoded())
-            );
-            keyStore.setKeyEntry(ALIAS, privateKey, null, new Certificate[]{cert});
-
-            promise.resolve("ECC key pair generated and stored successfully");
-        } catch (Exception e) {
-            promise.reject("ECC_ERROR", "Failed to generate ECC key pair: " + e.getMessage());
-        }
+    public KeyPair generateECCKeyPair() throws Exception {
+        KeyPair keyPair = generateSoftwareECCKeyPair();
+        return keyPair;
     }
 
     @ReactMethod
-    public void generateCSR(
-            String cn,
-            String serialNum,
-            String userId,
-            String country,
-            String state,
-            String locality,
-            String organization,
-            String organizationalUnit,
-            Promise promise) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER);
-            keyStore.load(null);
-            PrivateKey privateKey = (PrivateKey) keyStore.getKey(ALIAS, null);
-            PublicKey publicKey = keyStore.getCertificate(ALIAS).getPublicKey();
-
-            String csr = createCSR(cn, serialNum, userId, country, state, locality, organization, organizationalUnit, privateKey, publicKey);
-            promise.resolve(csr);
-        } catch (Exception e) {
-            promise.reject("CSR_ERROR", "Failed to generate CSR: " + e.getMessage());
-        }
-    }
-
-    @ReactMethod
-    public void storeCertificateInfo(
-        String clientCertIssuingCa,
-        String clientCert,
-        String clientCertExpiration,
+public void generateCSR(
+        String cn,
+        String serialNum,
+        String userId,
+        String country,
+        String state,
+        String locality,
+        String organization,
+        String organizationalUnit,
         Promise promise) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER);
-            keyStore.load(null, null);
+    try {
+        KeyPair keyPair = generateECCKeyPair();
+        PrivateKey privateKey = keyPair.getPrivate();
+        PublicKey publicKey = keyPair.getPublic();
 
-            // Parse and store client certificate
-            String base64ClientCert = clientCert
-                .replace("-----BEGIN CERTIFICATE-----", "")
-                .replace("-----END CERTIFICATE-----", "")
-                .replaceAll("\\s", "");
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-            byte[] clientCertBytes = Base64.decode(base64ClientCert, Base64.DEFAULT);
-            InputStream clientCertStream = new ByteArrayInputStream(clientCertBytes);
-            X509Certificate clientCertificate = (X509Certificate) certFactory.generateCertificate(clientCertStream);
-            keyStore.setCertificateEntry(CLIENT_CERT_ALIAS, clientCertificate);
+        // Encode keys to Base64
+        String base64PrivateKey = Base64.encodeToString(privateKey.getEncoded(), Base64.NO_WRAP);
+        String base64PublicKey = Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP);
 
-            // Parse and store root CA certificate
-            String base64CaCert = clientCertIssuingCa
-                .replace("-----BEGIN CERTIFICATE-----", "")
-                .replace("-----END CERTIFICATE-----", "")
-                .replaceAll("\\s", "");
-            byte[] caCertBytes = Base64.decode(base64CaCert, Base64.DEFAULT);
-            InputStream caCertStream = new ByteArrayInputStream(caCertBytes);
-            X509Certificate caCertificate = (X509Certificate) certFactory.generateCertificate(caCertStream);
-            keyStore.setCertificateEntry(ROOT_CA_ALIAS, caCertificate);
+        // Generate CSR
+        String csr = createCSR(
+                cn, serialNum, userId, country, state, locality, organization, organizationalUnit,
+                privateKey, publicKey);
 
-            promise.resolve(true);
-        } catch (Exception e) {
-            Log.e(TAG, "Exception: " + e.getMessage());
-            promise.reject("CERTIFICATE_STORAGE_ERROR", "Failed to store certificates: " + e.getMessage());
-        }
+        // Return everything to JS
+        WritableMap result = Arguments.createMap();
+        result.putString("csr", csr);
+        result.putString("privateKey", base64PrivateKey);
+        result.putString("publicKey", base64PublicKey);
+
+        promise.resolve(result);
+    } catch (Exception e) {
+        promise.reject("CSR_ERROR", "Failed to generate CSR: " + e.getMessage());
     }
+}
+
 
     private String createCSR(
             String cn,

@@ -1,39 +1,117 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, NativeEventEmitter } from 'react-native';
 
 const { CSRModule, MqttModule } = NativeModules;
 
-// Wrap and export methods
+const mqttEmitter = new NativeEventEmitter(MqttModule);
 
-export function generateCSR(cn: string): Promise<string> {
-  return CSRModule.generateCSR(cn);
-}
+type GenerateCSRParams = {
+  cn?: string;
+  serialNum?: string;
+  userId?: string;
+  country?: string;
+  state?: string;
+  locality?: string;
+  organization?: string;
+  organizationalUnit?: string;
+};
 
-export function connect(options: {
-  host: string;
-  port: number;
+type ConnectMqttParams = {
+  broker: string;
   clientId: string;
-  cert: string;
-  key: string;
-}): Promise<void> {
-  return MqttModule.connect(options);
-}
+  clientCertPem: string;
+  privateKeyPem: string;
+  rootCaPem: string;
+};
 
-export function publish(topic: string, message: string): Promise<void> {
-  return MqttModule.publish(topic, message);
-}
+type MqttEventHandler = (message: string) => void;
 
-export function subscribe(topic: string): Promise<void> {
-  return MqttModule.subscribe(topic);
-}
+export const generateCSR = async ({
+  cn,
+  serialNum,
+  userId,
+  country,
+  state,
+  locality,
+  organization,
+  organizationalUnit,
+}: GenerateCSRParams): Promise<{
+  csr: string;
+  privateKey: string;
+  publicKey: string;
+}> => {
+  try {
+    const result = await CSRModule.generateCSR(
+      cn || '',
+      serialNum || '',
+      userId || '',
+      country || '',
+      state || '',
+      locality || '',
+      organization || '',
+      organizationalUnit || ''
+    );
 
-export function disconnect(): Promise<void> {
-  return MqttModule.disconnect();
-}
+    return {
+      csr: result.csr,
+      privateKey: result.privateKey,
+      publicKey: result.publicKey,
+    };
+  } catch (err: any) {
+    throw new Error(err?.message || 'CSR generation failed');
+  }
+};
+
+export const connectMqtt = ({
+  broker,
+  clientId,
+  clientCertPem,
+  privateKeyPem,
+  rootCaPem,
+}: ConnectMqttParams): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    MqttModule.connect(
+      broker,
+      clientId,
+      clientCertPem,
+      privateKeyPem,
+      rootCaPem,
+      (successMessage: string) => resolve(successMessage),
+      (errorMessage: string) => reject(new Error(errorMessage))
+    );
+  });
+};
+
+export const subscribe = (topic: string, qos: number = 0): void => {
+  MqttModule.subscribe(topic, qos);
+};
+
+export const publish = (
+  topic: string,
+  message: string,
+  qos: number = 0,
+  retained: boolean = false
+): void => {
+  MqttModule.publish(topic, message, qos, retained);
+};
+
+export const disconnect = (): Promise<string> => {
+  return new Promise((resolve) => {
+    MqttModule.disconnect((msg: string) => resolve(msg));
+  });
+};
+
+export const onMqttEvent = (
+  eventName: string,
+  handler: MqttEventHandler
+) => {
+  return mqttEmitter.addListener(eventName, handler);
+};
 
 export default {
   generateCSR,
-  connect,
-  publish,
+  connectMqtt,
   subscribe,
+  publish,
   disconnect,
+  onMqttEvent,
 };
