@@ -41,10 +41,6 @@ import org.bouncycastle.util.io.pem.PemWriter;
 
 public class CSRModule extends ReactContextBaseJavaModule {
     private static final String TAG = "CSRModule";
-    private static final String KEYSTORE_PROVIDER = "AndroidKeyStore";
-    private static final String ALIAS = "GENERAC_PWRVIEW_ECC_KEY_ALIAS";
-    private static final String CLIENT_CERT_ALIAS = "clientCert";
-    private static final String ROOT_CA_ALIAS = "rootCa";
 
     public CSRModule(ReactApplicationContext reactContext) {
         super(reactContext);
