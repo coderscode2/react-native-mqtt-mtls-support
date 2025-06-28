@@ -1,12 +1,12 @@
 import Foundation
-import CFNetwork
+import CFNetwork          
 import CocoaMQTT
 
 @objc(MqttModule)
 class MqttModule: NSObject {
     
     private var mqtt: CocoaMQTT?
-    
+
     @objc(connect:clientId:clientCertPem:privateKeyPem:rootCaPem:successCallback:errorCallback:)
     func connect(broker: String,
                  clientId: String,
@@ -23,8 +23,8 @@ class MqttModule: NSObject {
 
         let mqtt = CocoaMQTT(clientID: clientId, host: host, port: 8883)
         mqtt.enableSSL = true
-        mqtt.allowUntrustCACertificate = true // only for dev!
-
+        mqtt.allowUntrustCACertificate = true // only for development
+        
         do {
             let sslSettings = try buildSSLSettings(
                 clientCertPem: clientCertPem,
@@ -47,7 +47,7 @@ class MqttModule: NSObject {
 
         mqtt.didDisconnect = { _, err in
             if let err = err {
-                print("Disconnected with error: \(err.localizedDescription)")
+                print("MQTT disconnected: \(err.localizedDescription)")
             }
         }
 
@@ -56,20 +56,20 @@ class MqttModule: NSObject {
     }
 
     private func buildSSLSettings(clientCertPem: String,
-                                   privateKeyPem: String,
-                                   rootCaPem: String) throws -> [String: NSObject] {
+                                  privateKeyPem: String,
+                                  rootCaPem: String) throws -> [String: NSObject] {
 
         func loadIdentity(cert: String, key: String) throws -> SecIdentity {
-            let p12 = try pemToP12(certPem: cert, keyPem: key)
+            let p12data = try pemToP12(certPem: cert, keyPem: key)
             var items: CFArray?
-            let options: NSDictionary = [kSecImportExportPassphrase as NSString: ""]
-            let status = SecPKCS12Import(p12 as CFData, options, &items)
+            let options = [kSecImportExportPassphrase as NSString: ""]
+            let status = SecPKCS12Import(p12data as CFData, options as CFDictionary, &items)
             guard status == errSecSuccess,
                   let array = items as? [[String: Any]],
-                  let identity = array.first?[kSecImportItemIdentity as String] as? SecIdentity else {
-                throw NSError(domain: "SSL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to parse identity"])
+                  let secId = array.first?[kSecImportItemIdentity as String] as? SecIdentity else {
+                throw NSError(domain: "SSL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to import identity"])
             }
-            return identity
+            return secId
         }
 
         let identity = try loadIdentity(cert: clientCertPem, key: privateKeyPem)
@@ -85,38 +85,36 @@ class MqttModule: NSObject {
     }
 
     private func pemToP12(certPem: String, keyPem: String) throws -> Data {
-        let certPEM = certPem.trimmingCharacters(in: .whitespacesAndNewlines)
-        let keyPEM = keyPem.trimmingCharacters(in: .whitespacesAndNewlines)
+        let certClean = certPem.trimmingCharacters(in: .whitespacesAndNewlines)
+        let keyClean = keyPem.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let tempDir = FileManager.default.temporaryDirectory
-        let certPath = tempDir.appendingPathComponent("cert.pem")
-        let keyPath = tempDir.appendingPathComponent("key.pem")
-        let p12Path = tempDir.appendingPathComponent("bundle.p12")
+        let tmp = FileManager.default.temporaryDirectory
+        let certURL = tmp.appendingPathComponent("temp_cert.pem")
+        let keyURL  = tmp.appendingPathComponent("temp_key.pem")
+        let p12URL  = tmp.appendingPathComponent("bundle.p12")
+        
+        try certClean.write(to: certURL, atomically: true, encoding: .utf8)
+        try keyClean.write(to: keyURL, atomically: true, encoding: .utf8)
 
-        try certPEM.write(to: certPath, atomically: true, encoding: .utf8)
-        try keyPEM.write(to: keyPath, atomically: true, encoding: .utf8)
-
-        let command = """
-        openssl pkcs12 -export -out \(p12Path.path) -inkey \(keyPath.path) -in \(certPath.path) -password pass:
+        let cmd = """
+        openssl pkcs12 -export -out \(p12URL.path) -inkey \(keyURL.path) -in \(certURL.path) -password pass:
         """
-
-        let result = try shell(command)
+        let result = try shell(cmd)
         guard result.exitCode == 0 else {
             throw NSError(domain: "SSL", code: -2, userInfo: [NSLocalizedDescriptionKey: result.output])
         }
 
-        return try Data(contentsOf: p12Path)
+        return try Data(contentsOf: p12URL)
     }
 
     private func pemToDerCert(pem: String) throws -> SecCertificate {
-        let lines = pem.components(separatedBy: .newlines)
-                        .filter { !$0.contains("BEGIN") && !$0.contains("END") }
-        let base64 = lines.joined()
-        guard let data = Data(base64Encoded: base64) else {
-            throw NSError(domain: "SSL", code: -3, userInfo: [NSLocalizedDescriptionKey: "Invalid CA cert"])
-        }
-        guard let cert = SecCertificateCreateWithData(nil, data as CFData) else {
-            throw NSError(domain: "SSL", code: -4, userInfo: [NSLocalizedDescriptionKey: "Failed to create certificate"])
+        let b64 = pem
+            .components(separatedBy: .newlines)
+            .filter { !$0.contains("BEGIN") && !$0.contains("END") }
+            .joined()
+        guard let data = Data(base64Encoded: b64),
+              let cert = SecCertificateCreateWithData(nil, data as CFData) else {
+            throw NSError(domain: "SSL", code: -3, userInfo: [NSLocalizedDescriptionKey: "Invalid CA certificate"])
         }
         return cert
     }
@@ -131,6 +129,6 @@ class MqttModule: NSObject {
         task.launch()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         task.waitUntilExit()
-        return (String(data: data, encoding: .utf8) ?? "", task.terminationStatus)
+        return (String(decoding: data, as: UTF8.self), task.terminationStatus)
     }
 }
