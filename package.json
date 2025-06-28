@@ -1,6 +1,6 @@
 {
   "name": "react-native-mqtt-mtls-support",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Handles MQTT connection over native layer providing mTLS support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
