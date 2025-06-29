@@ -7,16 +7,20 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.platform     = :ios, "12.0"
   s.source       = { :git => "https://github.com/coderscode2/react-native-mqtt-mtls-support.git", :tag => "#{s.version}" }
-  s.source_files = "ios/**/*.{h,m,swift}"
+  s.source_files = "ios/**/*.{h,m,swift,c}"
   s.requires_arc = true
 
-  # ✅ Core dependencies
-  s.dependency 'CocoaMQTT'
   s.dependency 'React-Core'
-
-  # ✅ Framework needed for SSL constants like `kCFStreamSSLTrustedRoots`
-  s.frameworks = 'CFNetwork'
-
-  # ✅ Swift version compatibility
+  s.dependency 'OpenSSL-Universal'
   s.swift_version = '5.0'
+
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'SWIFT_INCLUDE_PATHS' => '$(SRCROOT)/ios/CSRModule',
+    'OTHER_CFLAGS' => '-fmodules',
+    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
+  }
+
+  s.module_map = 'ios/CSRModule/module.modulemap'
+  s.header_mappings_dir = 'ios'
 end
