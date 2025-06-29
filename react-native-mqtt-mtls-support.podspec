@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "react-native-mqtt-mtls-support"
-  s.version      = "0.1.11"
+  s.version      = "0.2.0"
   s.summary      = "MQTT with mTLS support for React Native"
   s.authors      = { "Ved Yedla" => "veda59@gmail.com" }
   s.homepage     = "https://github.com/coderscode2/react-native-mqtt-mtls-support"
