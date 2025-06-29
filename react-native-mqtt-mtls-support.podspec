@@ -23,4 +23,7 @@ Pod::Spec.new do |s|
 
   s.module_map = 'ios/CSRModule/module.modulemap'
   s.header_mappings_dir = 'ios'
+
+  # ✅ Required to avoid build errors with Swift + custom module map
+  s.static_framework = false
 end
